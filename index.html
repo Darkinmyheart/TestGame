@@ -1,20 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text-based Game</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <div class="game-container">
-        <h1>Text-based Game</h1>
-        <div id="storyText" class="story-text">Bạn đang đứng trước một ngã ba. Bạn muốn đi hướng nào?</div>
-        <div class="choices">
-            <button id="choice1" class="choice-button" onclick="makeChoice(1)">Đi bên trái</button>
-            <button id="choice2" class="choice-button" onclick="makeChoice(2)">Đi bên phải</button>
+    <header>
+        <div class="sidebar">
+            <div class="character-profile">
+                <!-- <img src="avatar.png" alt="Avatar" class="avatar"> -->
+                <h2 id="character-name">Tên nhân vật</h2>
+                <p id="character-level">Level: 10</p>
+                <p id="character-exp">exp: 100/100</p>
+            </div>
+    
+            <div class="stats">
+                <h3>Thông tin:</h3>
+                <p>Vàng: 500</p>
+                <p>EXP: 200/500</p>
+            </div>
+    
+            <div class="inventory">
+                <h3>Hành trang:</h3>
+                <ul>
+                    <li>Kiếm</li>
+                    <li>Khiên</li>
+                    <li>Thuốc hồi máu</li>
+                </ul>
+            </div>
+    
+            <div class="actions">
+                <button>Trang bị</button>
+                <button>Thực hiện nhiệm vụ</button>
+                <button id="reset-btn">reset game</button>
+            </div>
         </div>
-    </div>
-    <script src="js/game.js"></script>
+        
+    </header>
+    <main>
+        <div class="main-content">
+            <div class="left-section">
+                <h2>Ăn uống, ngủ nghỉ</h2>
+                <p>Đây là phần quản lý các hoạt động như ăn, uống, và ngủ của nhân vật.</p>
+                <button>Ăn</button>
+                <button>Uống</button>
+                <button>Ngủ</button>
+            </div>
+    
+            <div class="middle-section">
+                <h2>Thám hiểm hoặc Tu luyện</h2>
+                <p>Phần này dành cho các hoạt động như thám hiểm, luyện tập hoặc học hỏi.</p>
+                <button>Thám hiểm</button>
+                <button id="train-btn">Tu luyện</button>
+            </div>
+            <div class="right-section">
+                <h3>Tự động hoạt động:</h3>
+                <label for="action-select">Chọn hành động:</label>
+                <select id="action-select">
+                    <option value="explore">Thám hiểm</option>
+                    <option value="train">Tu luyện</option>
+                    <option value="perform-task">Làm nhiệm vụ</option>
+                </select>
+            
+                <label for="interval-input">Khoảng thời gian (giây):</label>
+                <input type="number" id="interval-input" value="10" min="1">
+            
+                <button id="start-auto-btn">Bắt đầu tự động</button>
+                <button id="stop-auto-btn">Dừng tự động</button>
+            
+                <p id="auto-status">Tình trạng: Không hoạt động</p>
+            </div>
+        </div>
+        
+    </main>
+    <script type="module" src="js/main.js"></script>
 </body>
+
 </html>
