@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-based Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Text-based Game</h1>
+        <div id="storyText" class="story-text">Bạn đang đứng trước một ngã ba. Bạn muốn đi hướng nào?</div>
+        <div class="choices">
+            <button id="choice1" class="choice-button" onclick="makeChoice(1)">Đi bên trái</button>
+            <button id="choice2" class="choice-button" onclick="makeChoice(2)">Đi bên phải</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
