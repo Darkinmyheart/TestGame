@@ -1,27 +1,22 @@
 // events.js
-import { saveCharacterData, loadCharacterData, updateUI, checkLevelUp, getCharacter } from './data.js';
+import { saveCharacterData, loadCharacterData, updateUI, checkLevelUp, getCharacter, getCharacterInv, getItemDetail, getItemList, addHungry, addLog, reduce_quantity_item } from './data.js';
 const character = getCharacter();
-// Hàm thêm EXP khi người chơi nhấn nút
-export function gainExp(amount) {
-    character.exp += amount;
-    checkLevelUp(); // Kiểm tra nếu đủ EXP lên cấp
-    saveCharacterData(); // Lưu lại dữ liệu
-    updateUI(); // Cập nhật giao diện
-}
+// // Hàm thêm EXP khi người chơi nhấn nút
+// export function gainExp(amount) {
+//     character.exp += amount;
+//     checkLevelUp(); // Kiểm tra nếu đủ EXP lên cấp
+//     saveCharacterData(); // Lưu lại dữ liệu
+//     updateUI(); // Cập nhật giao diện
+// }
 
 
 // Thêm các event cho các nút
 export function setupEvents() {
-    // Thêm sự kiện cho nút "Tu luyện"
-    document.getElementById('train-btn').addEventListener('click', () => {
-        gainExp(100);
-    });
 
     document.getElementById('reset-btn').addEventListener('click', () => {
         localStorage.clear();
         location.reload()
     })
-
     // Khi người dùng thay đổi loại vật phẩm trong select
     document.getElementById('inventoryType').addEventListener('change', showSelectedInventory);
 
@@ -46,23 +41,13 @@ export function setupEvents() {
     });
 
 }
-// Dữ liệu giả lập cho hành trang
-let inventory = {
-    weapons: [
-        { name: "Kiếm sắt", damage: 10, type: "Vũ khí" },
-        { name: "Khiên gỗ", defense: 5, type: "Vũ khí" }
-    ],
-    consumables: [
-        { name: "Bình máu", quantity: 2, type: "Tiêu hao" },
-        { name: "Thuốc tăng lực", quantity: 1, type: "Tiêu hao" }
-    ],
-    materials: [
-    ]
-};
 
 // Hàm hiển thị vật phẩm dựa trên loại được chọn
 function showSelectedInventory() {
-    let selectedType = document.getElementById('inventoryType').value; // Lấy loại vật phẩm từ dropdown
+
+    let selectedType = document.getElementById('inventoryType').value;
+    const inv = getCharacterInv();
+    const items = getItemList();
     let inventoryDisplay = document.getElementById('inventoryItems');
     inventoryDisplay.innerHTML = ''; // Xóa nội dung cũ nếu có
 
@@ -71,27 +56,89 @@ function showSelectedInventory() {
     itemList.style.listStyleType = 'none';  // Loại bỏ dấu chấm
     itemList.style.paddingLeft = '0';
 
-    inventory[selectedType].forEach(item => {
-        let listItem = document.createElement('li');
-        let itemName = document.createElement('span');
-        itemName.classList.add('item-name');
-        itemName.textContent = item.name;
+    // Lọc danh sách inventory để lấy những vật phẩm thuộc loại đã chọn
+    inv
+        .filter(item => items[selectedType].some(i => i.id === item.itemId))
+        .forEach(item => {
+            // Lấy thông tin chi tiết của item từ itemList
+            let itemDetails = getItemDetail(item.itemId);
 
-        let itemDetails = document.createElement('span');
-        itemDetails.classList.add('item-details');
+            let listItem = document.createElement('li');
+            listItem.style.display = 'flex';
+            listItem.style.justifyContent = 'space-between';
+            let itemName = document.createElement('span');
+            itemName.classList.add('item-name');
+            itemName.textContent = `${itemDetails.name} (x${item.quantity})`; // Hiển thị số lượng
+            let btn = document.createElement('button');
+            btn.textContent = 'Sử dụng';
+            btn.addEventListener('click', () => useFood(item,1));
 
-        // Hiển thị thông tin chi tiết tùy vào loại vật phẩm
-        if (item.damage) itemDetails.textContent = ` (sát thương: ${item.damage})`;
-        if (item.defense) itemDetails.textContent = ` (phòng thủ: ${item.defense})`;
-        if (item.quantity) itemDetails.textContent = ` (số lượng: ${item.quantity})`;
+            let btnMax = document.createElement('button');
+            btnMax.textContent = 'Dùng tất cả';
+            btnMax.addEventListener('click', () => useFood(item,item.quantity));
 
-        listItem.appendChild(itemName);
-        listItem.appendChild(itemDetails);
-        itemList.appendChild(listItem);
-    });
+            let divalt= document.createElement('div')
+            divalt.appendChild(btn);
+            divalt.appendChild(btnMax);
+            listItem.appendChild(itemName);
+            listItem.appendChild(divalt);
+            itemList.appendChild(listItem);
+
+            // Sự kiện hiển thị tooltip khi trỏ chuột vào item
+            let tooltipTimeout;
+            listItem.addEventListener('mouseenter', function (e) {
+                tooltipTimeout = setTimeout(() => {
+                    showTooltip(itemDetails, e);
+                }, 1000); // Hiển thị sau 1 giây
+            });
+
+            // Ẩn tooltip khi nhấp chuột vào item
+            listItem.addEventListener('click', function () {
+                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu tooltip đang đợi
+                hideTooltip(); // Ẩn tooltip ngay khi nhấp chuột
+            });
+            // Ẩn tooltip khi di chuột ra ngoài item
+            listItem.addEventListener('mouseleave', function () {
+                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu chuột rời đi trước 1 giây
+                hideTooltip(); // Ẩn tooltip
+            });
+        });
 
     inventoryDisplay.appendChild(itemList); // Hiển thị danh sách trong modal
 }
+
+//Sử dụng thức ăn
+function useFood(item,quantity) {
+    let itemInfo = getItemDetail(item.itemId);
+    addHungry(itemInfo.bonusHungry*quantity);
+    addLog(`Sử dụng ${quantity} * ${itemInfo.name} tăng độ no ${itemInfo.bonusHungry* quantity}`)
+    reduce_quantity_item(item.itemId, quantity);
+    showSelectedInventory();
+    updateUI();
+}
+// Hàm hiển thị tooltip với thông tin chi tiết của item
+function showTooltip(item, event) {
+    let tooltip = document.getElementById('tooltip');
+    tooltip.innerHTML = `
+    Tên: ${item.name} <br>
+    Giá: ${item.price} <br>
+    Sát thương: ${item.damage || 'N/A'} <br>
+    Phòng thủ: ${item.defense || 'N/A'}
+    `;
+    // Hiển thị tooltip
+    tooltip.style.display = 'block';
+
+    // Đặt vị trí tooltip dựa trên sự kiện chuột
+    tooltip.style.left = `${event.pageX + 10}px`;
+    tooltip.style.top = `${event.pageY + 10}px`;
+}
+
+// Hàm ẩn tooltip khi chuột rời item
+function hideTooltip() {
+    let tooltip = document.getElementById('tooltip');
+    tooltip.style.display = 'none';
+}
+
 function showAtributeCharater() {
     let atributeDisplay = document.getElementById('atribute_list');
     atributeDisplay.innerHTML = ''; // Xóa nội dung cũ nếu có
@@ -121,19 +168,7 @@ function showAtributeCharater() {
     });
     atributeDisplay.appendChild(attList);
 }
-function addLog(message) {
-    let logContainer = document.getElementById('action-log');
-    
-    // Tạo một mục log mới
-    let logEntry = document.createElement('div');
-    logEntry.textContent = `[${currentTime}] ${message}`;
-    
-    // Thêm log mới vào container
-    logContainer.appendChild(logEntry);
-    
-    // Cuộn log container xuống cuối cùng để xem log mới nhất
-    logContainer.scrollTop = logContainer.scrollHeight;
-}
+
 
 
 

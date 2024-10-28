@@ -143,9 +143,6 @@ p#auto-status {
     max-height: 900px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
-.modal-content-inv{
-    
-}
 /* Điều chỉnh màu sắc cho các tiêu đề */
 .modal-content h3 {
     color: #34495e; /* Màu chữ đậm hơn */
@@ -188,6 +185,7 @@ p#auto-status {
 }
 .log-container {
     position: fixed;
+    font-size: 10px;
     bottom: 20px; /* Đặt ở cạnh dưới */
     right: 20px; /* Đặt ở cạnh phải */
     width: 300px; /* Độ rộng của ô log */
@@ -199,4 +197,16 @@ p#auto-status {
     padding: 10px; /* Khoảng cách bên trong */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng */
     overflow-y: auto; /* Cuộn dọc nếu log quá dài */
+}
+/* CSS cho tooltip */
+.tooltip {
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    position: absolute;
+    z-index: 2000;
+    opacity:1;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
