@@ -69,21 +69,10 @@
                 <hr>
             </div>
             <div class="right-section">
-                <h3>Tự động hoạt động:</h3>
-                <label for="action-select">Chọn hành động:</label>
-                <select id="action-select">
-                    <option value="explore">Thám hiểm</option>
-                    <option value="train">Tu luyện</option>
-                    <option value="perform-task">Làm nhiệm vụ</option>
-                </select>
-
-                <label for="interval-input">Khoảng thời gian (giây):</label>
-                <input type="number" id="interval-input" value="10" min="1">
-
-                <button id="start-auto-btn">Bắt đầu tự động</button>
-                <button id="stop-auto-btn">Dừng tự động</button>
-
-                <p id="auto-status">Tình trạng: Không hoạt động</p>
+                <ul id="auto-log-list">
+                </ul>
+                <button id="auto-start">Bắt đầu</button>
+                <button id="auto-stop">Dừng tự động</button>
             </div>
         </div>
 
@@ -120,7 +109,6 @@
             <!-- Nội dung log sẽ được chèn vào đây -->
         </div>
         <div id="tooltip" class="tooltip"></div>
-
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"

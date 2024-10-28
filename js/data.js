@@ -1,12 +1,11 @@
 // data.js
 
 let time = 0;
-
-const level = {
+const levelData = {
     1: {
         name: "Luyện Khí",
-        subLevels: ["1 - 9 tầng"],
-        expRequired: [1000],  // 1000 EXP mỗi tầng
+        subLevels: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        expRequired: [200, 400, 800, 1200, 1400, 1600, 1800, 2000, 2500],
         description: "Bắt đầu hấp thụ linh khí để tu luyện cơ bản."
     },
     2: {
@@ -92,7 +91,8 @@ const event = {
         name: "event_danh_ca",
         description_1: "Bắt cá",
         description_2: "tỉ lệ câu được cá quý tỉ lệ thuận với sức mạnh",
-        time: 0.5,
+        time: 2,
+        hungryRequired: 5,
         reward: {
             1: [
                 { itemId: 11, quantity: 1 },
@@ -112,15 +112,26 @@ const event = {
                 { itemId: 19, quantity: 1 },
             ]
         }
+    },
+    {
+        name: "event_tu_luyen_1",
+        description_1: "Tu luyện sau nhà",
+        description_2: "Tu vi tăng 10 tốn 20 thể lực và 8 giờ",
+        time: 8,
+        hungryRequired: 20,
+        bonusExp: 10,
     }]
 }
+//Tuổi ban đầu
+let basicAge = 17;
 // Dữ liệu nhân vật
 let character = {
     name: 'Nhân vật',
     level: 0,
     exp: 0,
-    expToLevelUp: level[1].expRequired,
-    age: 17,
+    expToLevelUp: 200,
+    age: Math.floor(time * 24 * 30 * 12 / 360) + basicAge,
+    maxAge: 100,
     attack: 5,
     defend: 5,
     maxAge: 100,
@@ -143,6 +154,25 @@ let character_inv = [];
 //Hàm để nhận dữ liệu list item
 export function getItemList() {
     return items;
+}
+//Hàm kiểm tra tuổi thọ
+export function checkAge(timeSpend) {
+    let timeAlive = (character.maxAge - character.age) * 24 * 30 * 12;
+    if (timeSpend + time >= timeAlive) {
+        return false;
+    } else {
+        return true;
+    }
+}
+//Hàm tốn time để thực hiện event
+export function spendTime(timeSpend) {
+    if (checkAge(timeSpend)) {
+        updateTime();
+        time += timeSpend;
+        return true;
+    } else {
+        return false;
+    }
 }
 // Hàm để nhận dữ liệu nhân vật hiện tại
 export function getCharacter() {
@@ -223,69 +253,130 @@ export function updateTime() {
     let time = document.getElementById('date');
     time.innerText = `${convertGameTimeToDate()}`;
 }
+// Hàm xử lý các sự kiện dựa trên event.name
+function eventHandler(event_this) {
+    switch (event_this.name) {
+        case 'event_danh_ca':
+            return event_danh_ca(event_this);
+        case 'event_tu_luyen_1':
+            return event_tu_luyen(event_this);
+        default:
+            console.log("Sự kiện không được định nghĩa.");
+    }
+}
+// Mảng chứa các hàm cần chạy tự động
+const autoFunctions = [];
+
+// Hàm thêm hàm xử lý sự kiện vào mảng autoFunctions
+function addToAutoFunctions(event_this) {
+    addAutoLog(event_this);
+}
+// Hàm hiển thị danh sách sự kiện và thêm nút Auto
 export function updateUIEvent() {
-    var listevent = document.getElementById('event-Cul');
+    const listevent = document.getElementById('event-Cul');
     listevent.innerText = '';
+
     for (let i in event) {
         if (i <= character.level + 1) {
             event[i].forEach(e => {
-                var event_this = e;
-                var btn = document.createElement('button');
-                btn.id = e.name;
-                btn.innerText = e.description_1;
-                listevent.appendChild(btn);
+                const event_this = e;
 
+                // Tạo container cho nút sự kiện và nút Auto
+                const divContainer = document.createElement('div');
+                divContainer.style.display = 'flex';
+                divContainer.style.alignItems = 'center';
+                divContainer.style.marginBottom = '5px';
+
+                // Tạo nút sự kiện
+                const btn = document.createElement('button');
+                btn.style.width = '80%'; // Điều chỉnh để có chỗ cho nút Auto
+                btn.id = event_this.name;
+                btn.innerText = event_this.description_1;
+                btn.classList.add('event-button');
+
+                // Tooltip cho nút sự kiện
                 let tooltipTimeout;
                 btn.addEventListener('mouseenter', function (e) {
                     tooltipTimeout = setTimeout(() => {
                         showTooltip_event(event_this, e);
                     }, 1000);
                 });
-
-                // Sử dụng hàm ẩn danh để trì hoãn gọi event_danh_ca
-                btn.addEventListener('click', () => event_danh_ca(event_this));
-
+                btn.addEventListener('click', () => eventHandler(event_this));
                 btn.addEventListener('mouseleave', function () {
                     clearTimeout(tooltipTimeout);
                     hideTooltip_event();
                 });
+
+                // Tạo nút Auto
+                const autoBtn = document.createElement('button');
+                autoBtn.innerText = 'Auto';
+                autoBtn.classList.add('auto-button');
+                autoBtn.style.width = '20%';
+                autoBtn.style.marginLeft = '5px';
+                autoBtn.addEventListener('click', () => addToAutoFunctions(event_this));
+
+                // Thêm các nút vào container
+                divContainer.appendChild(btn);
+                divContainer.appendChild(autoBtn);
+
+                // Thêm container vào listevent
+                listevent.appendChild(divContainer);
             });
+
+            // Thêm dòng trống giữa các sự kiện
+            const br = document.createElement('br');
+            listevent.appendChild(br);
         }
     }
 }
 
-function event_danh_ca(event) {
-    // Tỷ lệ xuất hiện của từng rate
-    const rates = [
-        { rate: 1, chance: 70 },  // 70% cho rate 1
-        { rate: 2, chance: 20 },  // 20% cho rate 2
-        { rate: 3, chance: 8 },   // 8% cho rate 3
-        { rate: 4, chance: 2 }    // 2% cho rate 4
-    ];
-
-    // Random một số từ 0 đến 99 để xác định nhóm rate
-    const randomValue = Math.floor(Math.random() * 100);
-    // Xác định nhóm rate dựa vào randomValue
-    let selectedRate;
-    let cumulativeChance = 0;
-    for (const rate of rates) {
-        cumulativeChance += rate.chance;
-        if (randomValue < cumulativeChance) {
-            selectedRate = rate.rate;
-            break;
+//Hàm function tu_luyen_1
+function event_tu_luyen(event) {
+    if (spendTime(event.time)) {
+        if (reduce_hungry(event.hungryRequired)) {
+            addExp(event.bonusExp);
+            updateUI();
+            return true;
         }
     }
+}
+//Hàm function bắt cá
+function event_danh_ca(event) {
+    if (spendTime(event.time)) {
+        if (reduce_hungry(event.hungryRequired)) {
+            // Tỷ lệ xuất hiện của từng rate
+            const rates = [
+                { rate: 1, chance: 70 },  // 70% cho rate 1
+                { rate: 2, chance: 20 },  // 20% cho rate 2
+                { rate: 3, chance: 8 },   // 8% cho rate 3
+                { rate: 4, chance: 2 }    // 2% cho rate 4
+            ];
 
-    // Chọn một loại cá ngẫu nhiên từ nhóm rate đã xác định
-    const fishPool = event.reward[selectedRate];
-    const selectedFish = fishPool[Math.floor(Math.random() * fishPool.length)];
-    addToInventory(selectedFish.itemId, selectedFish.quantity);
-    addLog(`Câu được ${selectedFish.quantity}  ${getItemDetail(selectedFish.itemId).name}`)
-    character.hungry -= 10;
-    updateUI();
-    time+=2;
-    updateTime();
-    return selectedFish;
+            // Random một số từ 0 đến 99 để xác định nhóm rate
+            const randomValue = Math.floor(Math.random() * 100);
+            // Xác định nhóm rate dựa vào randomValue
+            let selectedRate;
+            let cumulativeChance = 0;
+            for (const rate of rates) {
+                cumulativeChance += rate.chance;
+                if (randomValue < cumulativeChance) {
+                    selectedRate = rate.rate;
+                    break;
+                }
+            }
+
+            // Chọn một loại cá ngẫu nhiên từ nhóm rate đã xác định
+            const fishPool = event.reward[selectedRate];
+            const selectedFish = fishPool[Math.floor(Math.random() * fishPool.length)];
+
+            // Thêm cá vào túi và ghi log
+            addToInventory(selectedFish.itemId, selectedFish.quantity);
+            addLog(`Câu được ${selectedFish.quantity} ${getItemDetail(selectedFish.itemId).name}`);
+            updateUI();
+
+            return true;  // Trả về true khi thành công
+        }
+    }
 }
 
 // Hàm hiển thị tooltip với thông tin chi tiết của item
@@ -305,31 +396,45 @@ function hideTooltip_event() {
     let tooltip = document.getElementById('tooltip');
     tooltip.style.display = 'none';
 }
-
-// Hàm kiểm tra nếu đủ EXP để lên cấp
-export function checkLevelUp() {
-    expToLevelUp = level[character.level + 1].expRequired[0];
-    if (character) { }
-}
 // Hàm kiểm tra đói
-export function reduce_hungry(hungryRe){
-    if(character.hungry-hungryRe<0){
-        return
+export function reduce_hungry(hungryRe) {
+    if (character.hungry - hungryRe < 0) {
+        addLog(`Cần ${hungryRe} thể lực để thực hiện`);
+        return false;
+    } else {
+        character.hungry -= hungryRe;
+        return true
+    }
+}
+//Hàm tăng exp
+function addExp(bonnusExp) {
+    // Tính tổng exp sau khi thêm
+    const expAfter = character.exp + bonnusExp;
+
+    // Nếu tổng exp vượt quá expToLevelUp, đặt exp bằng expToLevelUp
+    if (expAfter >= character.expToLevelUp) {
+        character.exp = character.expToLevelUp; // Giới hạn ở expToLevelUp
+        addLog('Bạn có thể tăng cảnh giới rồi! Chúc mừng')
+    } else {
+        // Nếu chưa đạt tới expToLevelUp, cộng exp bình thường
+        character.exp += bonnusExp;
+        addLog(`Tu vi của bạn tăng ${bonnusExp}`)
     }
 }
 
+//Hàm trả về cấp độ từ exp đang có load khi khởi động
 function getLevelByExp(exp) {
     let currentLevel = null;
     let currentSubLevel = null;
 
-    for (let lvl in level) {
-        let subLevels = level[lvl].subLevels;
-        let expRequired = level[lvl].expRequired;
+    for (let lvl in levelData) {
+        let subLevels = levelData[lvl].subLevels;
+        let expRequired = levelData[lvl].expRequired;
 
         // Kiểm tra trong từng cấp nhỏ của mỗi cấp lớn
         for (let i = 0; i < subLevels.length; i++) {
             if (exp < expRequired[i]) {
-                currentLevel = level[lvl].name; // Cấp lớn
+                currentLevel = levelData[lvl].name; // Cấp lớn
                 currentSubLevel = subLevels[i]; // Cấp nhỏ
                 return `${currentLevel} - ${currentSubLevel}`;
             }
@@ -337,8 +442,30 @@ function getLevelByExp(exp) {
     }
 
     // Nếu người chơi có EXP cao hơn tất cả, trả về cấp cao nhất
-    let highestLevel = level[Object.keys(level).length];
+    let highestLevel = levelData[Object.keys(levelData).length];
     return `${highestLevel.name} - ${highestLevel.subLevels[0]}`;
+}
+//Hàm trả lưu ExpToLevelUp của character từ exp
+function updateExpToLevelUp() {
+    let totalExp = character.exp;
+
+    for (let level in levelData) {
+        const levelInfo = levelData[level];
+        const expRequirements = levelInfo.expRequired;
+
+        for (let i = 0; i < expRequirements.length; i++) {
+            if (totalExp < expRequirements[i]) {
+                // Cập nhật thông tin về cấp độ, giai đoạn và expRequired
+                character.level = parseInt(level);
+                character.expToLevelUp = expRequirements[i];
+                return;
+            }
+        }
+    }
+
+    // Nếu vượt qua cấp cuối (ví dụ "Thành Tiên"), không cần thêm exp
+    character.level = 9;
+    character.expToLevelUp = null; // Đặt null nếu không còn cấp độ nào để lên
 }
 //Hàm tăng độ no
 export function addHungry(bonusHungry) {
@@ -377,4 +504,60 @@ export function addLog(message) {
 
     // Cuộn log container xuống cuối cùng để xem log mới nhất
     logContainer.scrollTop = logContainer.scrollHeight;
+}
+let interval;
+export function runAutoFunctions(status) {
+    if (status) {
+        // Nếu đang chạy, khởi tạo interval chỉ khi mảng autoFunctions có phần tử
+        if (autoFunctions.length > 0) {
+            let index = 0;
+            interval = setInterval(() => {
+                // Kiểm tra nếu đã chạy hết mảng, đặt lại chỉ số
+                if (index >= autoFunctions.length) {
+                    index = 0; // Đặt lại chỉ số để lặp lại từ đầu
+                }
+
+                // Thực thi hàm trong mảng
+                const result = autoFunctions[index]();
+                if (result === true) { // Tiến đến hàm tiếp theo nếu trả về `true` hoặc không trả về gì
+                    index++;
+                }
+                console.log(result)
+            }, 200); // Chạy mỗi 1 giây (hoặc có thể điều chỉnh)
+        }
+    } else {
+        // Nếu status là false, dừng interval
+        clearInterval(interval);
+    }
+}
+
+// Hàm thêm log và hiển thị trong auto-log
+export function addAutoLog(event_this) {
+    const autoFunction = () => eventHandler(event_this);
+    autoFunctions.push(autoFunction);
+    console.log(autoFunctions);
+
+    // Thêm vào log hiển thị
+    const logList = document.getElementById('auto-log-list');
+    const logItem = document.createElement('li');
+    logItem.classList.add('log-item');
+    logItem.textContent = event_this.description_1;
+
+    // Tạo nút "X" để xóa
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerText = "X";
+    deleteBtn.classList.add('delete-button');
+    deleteBtn.style.marginLeft = '10px';
+    
+    // Sự kiện khi nhấn nút "X"
+    deleteBtn.addEventListener('click', () => {
+        const index = autoFunctions.indexOf(autoFunction);
+        if (index > -1) {
+            autoFunctions.splice(index, 1);
+        }
+        logItem.remove();
+    });
+
+    logItem.appendChild(deleteBtn);
+    logList.appendChild(logItem);
 }

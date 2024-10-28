@@ -1,5 +1,5 @@
 // events.js
-import { saveCharacterData, loadCharacterData, updateUI, checkLevelUp, getCharacter, getCharacterInv, getItemDetail, getItemList, addHungry, addLog, reduce_quantity_item } from './data.js';
+import { saveCharacterData, loadCharacterData, updateUI, getCharacter, getCharacterInv, getItemDetail, getItemList, addHungry, addLog,runAutoFunctions, reduce_quantity_item } from './data.js';
 const character = getCharacter();
 // // Hàm thêm EXP khi người chơi nhấn nút
 // export function gainExp(amount) {
@@ -9,7 +9,7 @@ const character = getCharacter();
 //     updateUI(); // Cập nhật giao diện
 // }
 
-
+let functionAuto=[];
 // Thêm các event cho các nút
 export function setupEvents() {
 
@@ -39,7 +39,9 @@ export function setupEvents() {
     document.getElementById('closeAtributeBtn').addEventListener('click', function () {
         document.getElementById('atribute_character_modal').style.display = 'none';
     });
-
+    //Sự kiện cho button auto
+    document.getElementById('auto-start').addEventListener('click',()=>runAutoFunctions(true));
+    document.getElementById('auto-stop').addEventListener('click',()=>runAutoFunctions(false));
 }
 
 // Hàm hiển thị vật phẩm dựa trên loại được chọn
