@@ -1,6 +1,12 @@
+// Danh sách các ảnh avatar có sẵn trong thư mục avatars
+const avatarImages = [
+    '../avatars/avatar_1.png',
+    '../avatars/avatar_2.png',
+    '../avatars/avatar_3.png',
+    '../avatars/avatar_4.png'
+];
 // events.js
-import { useFood, getInventoryItem, addToInventory, getRecipe, updateUI, getCharacter, getCharacterInv, getItemDetail, getItemList, addHungry, addLog, runAutoFunctions, reduce_quantity_item } from './data.js';
-const character = getCharacter();
+import { setAvatarPlayer,getAvatarPlayer, getLevelByExp,updateUIInv,useWeapons, useFood, getInventoryItem, addToInventory, getRecipe, updateUI, getCharacter, getCharacterInv, getItemDetail, getItemList, addHungry, addLog, runAutoFunctions, reduce_quantity_item } from './data.js';
 // // Hàm thêm EXP khi người chơi nhấn nút
 // export function gainExp(amount) {
 //     character.exp += amount;
@@ -45,6 +51,30 @@ export function setupEvents() {
     document.getElementById('closeRecipeBtn').addEventListener('click', function () {
         document.getElementById('craft_modal').style.display = 'none';
     })
+    document.getElementById('close-popup-avatar').addEventListener('click', function () {
+        closeAvatarPopup();
+    })
+    // Hiển thị popup chọn avatar và tải các ảnh avatar có sẵn
+    document.getElementById('userAvatar').onclick = function () {
+        const avatarGallery = document.getElementById('avatarGallery');
+        avatarGallery.innerHTML = ''; // Xóa nội dung cũ
+
+        avatarImages.forEach(src => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Avatar option';
+            img.classList.add('avatar-option');
+            img.onclick = () => {
+                document.getElementById('userAvatar').src = src; // Cập nhật avatar chính
+                setAvatarPlayer(src);
+                closeAvatarPopup();
+            };
+            avatarGallery.appendChild(img);
+        });
+
+        document.getElementById('avatarPopup').style.display = 'flex';
+    };
+    document.getElementById('userAvatar').src = getAvatarPlayer();
     //Sự kiện cho button auto
     document.getElementById('auto-start').addEventListener('click', () => runAutoFunctions(true));
     document.getElementById('auto-stop').addEventListener('click', () => runAutoFunctions(false));
@@ -52,94 +82,29 @@ export function setupEvents() {
 
 // Hàm hiển thị vật phẩm dựa trên loại được chọn
 function showSelectedInventory() {
-
     let selectedType = document.getElementById('inventoryType').value;
-    const inv = getCharacterInv();
-    const items = getItemList();
-    let inventoryDisplay = document.getElementById('inventoryItems');
-    inventoryDisplay.innerHTML = ''; // Xóa nội dung cũ nếu có
-
-    // Tạo danh sách vật phẩm dựa trên loại đã chọn
-    let itemList = document.createElement('ul');
-    itemList.style.listStyleType = 'none';  // Loại bỏ dấu chấm
-    itemList.style.paddingLeft = '0';
-
-    // Lọc danh sách inventory để lấy những vật phẩm thuộc loại đã chọn
-    inv
-        .filter(item => items[selectedType].some(i => i.id === item.itemId))
-        .forEach(item => {
-            // Lấy thông tin chi tiết của item từ itemList
-            let itemDetails = getItemDetail(item.itemId);
-
-            let listItem = document.createElement('li');
-            let divalt = document.createElement('div');
-
-            listItem.style.display = 'flex';
-            listItem.style.justifyContent = 'space-between';
-            let itemName = document.createElement('span');
-            itemName.classList.add('item-name');
-            itemName.textContent = `${itemDetails.name} (x${item.quantity})`; // Hiển thị số lượng
-            if (selectedType === 'food') {
-                let btn = document.createElement('button');
-                btn.textContent = 'Sử dụng';
-                btn.addEventListener('click', () => useFood(item, 1));
-
-                let btnMax = document.createElement('button');
-                btnMax.textContent = 'Dùng tất cả';
-                btnMax.addEventListener('click', () => useFood(item, item.quantity));
-                divalt.appendChild(btn);
-                divalt.appendChild(btnMax);
-            }
-            listItem.appendChild(itemName);
-            listItem.appendChild(divalt);
-            itemList.appendChild(listItem);
-
-            // Sự kiện hiển thị tooltip khi trỏ chuột vào item
-            let tooltipTimeout;
-            listItem.addEventListener('mouseenter', function (e) {
-                tooltipTimeout = setTimeout(() => {
-                    showTooltip(itemDetails, e);
-                }, 1000); // Hiển thị sau 1 giây
-            });
-
-            // Ẩn tooltip khi nhấp chuột vào item
-            listItem.addEventListener('click', function () {
-                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu tooltip đang đợi
-                hideTooltip(); // Ẩn tooltip ngay khi nhấp chuột
-            });
-            // Ẩn tooltip khi di chuột ra ngoài item
-            listItem.addEventListener('mouseleave', function () {
-                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu chuột rời đi trước 1 giây
-                hideTooltip(); // Ẩn tooltip
-            });
-        });
-
-    inventoryDisplay.appendChild(itemList); // Hiển thị danh sách trong modal
+    // Gọi hàm để hiển thị danh sách đã lọc lên giao diện
+    updateUIInv(selectedType);
 }
 
-// Hàm hiển thị tooltip với thông tin chi tiết của item
-function showTooltip(item, event) {
-    let tooltip = document.getElementById('tooltip');
-    tooltip.innerHTML = `
-    Tên: ${item.name} <br>
-    Giá: ${item.price} <br>
-    Sát thương: ${item.damage || 'N/A'} <br>
-    Phòng thủ: ${item.defense || 'N/A'}
-    `;
-    // Hiển thị tooltip
-    tooltip.style.display = 'block';
 
-    // Đặt vị trí tooltip dựa trên sự kiện chuột
-    tooltip.style.left = `${event.pageX + 10}px`;
-    tooltip.style.top = `${event.pageY + 10}px`;
-}
-
-// Hàm ẩn tooltip khi chuột rời item
-function hideTooltip() {
-    let tooltip = document.getElementById('tooltip');
-    tooltip.style.display = 'none';
-}
-
+const attributeLabels = {
+    name: "Tên nhân vật",
+    exp: "Kinh nghiệm",
+    level: "Cảnh giới",
+    expToLevelUp: "Kinh nghiệm để lên cấp",
+    age: "Tuổi",
+    maxAge: "Tuổi tối đa",
+    attack: "Tấn công",
+    defend: "Phòng thủ",
+    health: "Máu hiện tại",
+    maxHealth: "Máu tối đa",
+    energy: "Năng lượng hiện tại",
+    maxEnergy: "Năng lượng tối đa",
+    hungry: "Đói bụng",
+    crit: "Tỉ lệ chí mạng",
+    dodge: "Tỉ lệ né tránh"
+};
 function showAtributeCharater() {
     let atributeDisplay = document.getElementById('atribute_list');
     atributeDisplay.innerHTML = ''; // Xóa nội dung cũ nếu có
@@ -147,26 +112,34 @@ function showAtributeCharater() {
     let attList = document.createElement('ul');
     attList.style.listStyleType = 'none';  // Loại bỏ dấu chấm
     attList.style.paddingLeft = '0';
-    // Chuyển đối tượng thành mảng các cặp [key, value]
-    Object.entries(character).forEach(([key, value]) => {
+
+    // Lấy thông tin từ getCharacter() hoặc từ character object.
+    const characterAttributes = getCharacter(); 
+
+    // Duyệt qua từng thuộc tính trong character
+    Object.entries(characterAttributes).forEach(([key, value]) => {
         let listItem = document.createElement('li');
+        listItem.style.display = 'flex';
+        listItem.style.justifyContent = 'space-between';
+        
         let itemName = document.createElement('span');
         itemName.classList.add('item-name');
-
-        // Hiển thị tên thuộc tính
-        itemName.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)}:`;
-
+        itemName.textContent = `${attributeLabels[key] || key}:`;
         let itemDetails = document.createElement('span');
         itemDetails.classList.add('item-details');
+        if(key==='level'){
+            itemDetails.textContent=getLevelByExp(characterAttributes.exp);
+        }else{
+            itemDetails.textContent = value;
+        }
 
-        // Hiển thị giá trị của thuộc tính
-        itemDetails.textContent = ` ${value}`;
-
-        // Ghép các phần tử lại và chèn vào danh sách
+        // Ghép các phần tử vào li và thêm vào ul
         listItem.appendChild(itemName);
         listItem.appendChild(itemDetails);
         attList.appendChild(listItem);
     });
+
+    // Hiển thị danh sách thuộc tính trong phần tử atributeDisplay
     atributeDisplay.appendChild(attList);
 }
 
@@ -221,15 +194,21 @@ function showCraftModal() {
             // Tạo nút chế tạo
             let craftBtn = document.createElement('button');
             craftBtn.textContent = 'Craft';
-            craftBtn.addEventListener('click', () => craftItem(recipe));
-
+            craftBtn.addEventListener('click', () => craftItem(recipe, 1));
+            //Tạo nút chế tất cả nguyên liệu có trong túi
             let craftAllBtn = document.createElement('button');
             craftAllBtn.textContent = 'All';
-
+            craftAllBtn.addEventListener('click', () => craftItem(recipe, -1));
+            //Tạo nút chế theo số lượng nguyên liệu tự chọn
             let craftQuantityBtn = document.createElement('button');
             craftQuantityBtn.textContent = 'Quantity';
             craftQuantityBtn.addEventListener('click', () => {
                 showCraftPopup(recipe);
+                document.getElementById('craft-required-info').textContent = `Trong túi có ${recipe.recipe.map(m => {
+                    const mi = getItemDetail(m.itemId);
+                    const itemInv = getCharacterInv().find(i => i.itemId === m.itemId);
+                    return `${mi.name}x${itemInv ? itemInv.quantity : '0'}`
+                }).join(', ')}`
             });
             divBtn.appendChild(craftBtn);
             divBtn.appendChild(craftAllBtn);
@@ -252,7 +231,6 @@ function showCraftModal() {
             craftItem(recipe, quantity);
             popup.style.display = 'none';
         };
-
         document.getElementById('craft-item-cancel-btn').onclick = function () {
             popup.style.display = 'none';
         };
@@ -273,34 +251,53 @@ function showCraftModal() {
     }
 
     // Hàm chế tạo vật phẩm dựa trên item trong recipe
-    function craftItem(item) {
+    function craftItem(item, quantity) {
+        let quantityAfter = quantity;
         const itemToCraft = getItemDetail(item.itemId);
+        if (quantity === -1) {
+            quantityAfter = Infinity; // Khởi tạo với giá trị rất lớn
 
+            // Kiểm tra số lượng tối đa có thể chế tạo dựa trên từng nguyên liệu trong recipe
+            for (const ingredient of item.recipe) {
+                const inventoryItem = getInventoryItem(ingredient.itemId, ingredient.quantity); // Lấy nguyên liệu từ túi
+                if (inventoryItem) {
+                    // Tính số lượng tối đa có thể dùng cho nguyên liệu hiện tại
+                    const maxQuantityForIngredient = Math.floor(inventoryItem.quantity / ingredient.quantity);
+                    console.log(maxQuantityForIngredient);
+                    // Cập nhật quantityAfter để tìm số lượng nhỏ nhất
+                    quantityAfter = Math.min(quantityAfter, maxQuantityForIngredient);
+                }
+            }
+        }
         if (!itemToCraft) {
             console.log("Không tìm thấy công thức chế tạo cho vật phẩm này.");
-            return false;
+            return;
         }
 
         // Kiểm tra nếu có đủ nguyên liệu
         for (const ingredient of item.recipe) {
-            if (!getInventoryItem(ingredient.itemId, ingredient.quantity)) {
-                addLog(`Không đủ ${getItemDetail(ingredient.itemId).name} x${ingredient.quantity} để chế tạo`);
+            if (!getInventoryItem(ingredient.itemId, ingredient.quantity * quantityAfter)) {
+                addLog(`Không đủ ${getItemDetail(ingredient.itemId).name} x${ingredient.quantity * quantityAfter} để chế tạo`);
                 return;
             }
         }
 
         // Trừ nguyên liệu sau khi xác nhận đủ
         for (const ingredient of item.recipe) {
-            reduce_quantity_item(ingredient.itemId, ingredient.quantity);
+            reduce_quantity_item(ingredient.itemId, ingredient.quantity * quantityAfter);
         }
 
         // Thêm vật phẩm đã chế tạo vào kho
-        addToInventory(item.itemId, item.quantity);
-        addLog(`Đã chế tạo thành công ${item.quantity} ${itemToCraft.name}!`);
+        addToInventory(item.itemId, item.quantity * quantityAfter);
+        addLog(`Đã chế tạo thành công ${item.quantity * quantityAfter} ${itemToCraft.name}!`);
         updateUI(); // Cập nhật giao diện nếu cần
         return true;
     }
 }
 
+// Đóng popup avatar
+function closeAvatarPopup() {
+    document.getElementById('avatarPopup').style.display = 'none';
+}
 
 

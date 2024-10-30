@@ -1,5 +1,5 @@
 // data.js
-
+let avatarPlayer = '../avatars/avatar_1.png';
 let time = 0;
 const levelData = {
     1: {
@@ -59,12 +59,12 @@ const levelData = {
 };
 const items = {
     weapons: [
-        { id: 1, name: "Kiếm gỗ", rarity: 1, damage: 10, weight: 5 },
-        { id: 2, name: "Rìu gỗ", rarity: 1, damage: 15, weight: 8 },
-        { id: 3, name: "Cung gỗ", rarity: 1, damage: 8, weight: 5 },
-        { id: 22, name: "Kiếm đá", rarity: 1, damage: 20, weight: 10 },
-        { id: 23, name: "Rìu đá", rarity: 1, damage: 25, weight: 12 },
-        { id: 24, name: "Cung đá", rarity: 1, damage: 18, weight: 7 }
+        { id: 1, name: "Kiếm gỗ", rarity: 1, attack: 10, weight: 5 },
+        { id: 2, name: "Rìu gỗ", rarity: 1, attack: 15, weight: 8 },
+        { id: 3, name: "Cung gỗ", rarity: 1, attack: 8, weight: 5, dodge: 10 },
+        { id: 22, name: "Kiếm đá", rarity: 1, attack: 20, weight: 10 },
+        { id: 23, name: "Rìu đá", rarity: 1, attack: 25, weight: 12 },
+        { id: 24, name: "Cung đá", rarity: 1, attack: 18, weight: 7 }
     ],
     armor: [
         { id: 4, name: "Áo giáp gỗ", rarity: 1, defense: 20, weight: 15, price: 5 },
@@ -207,27 +207,51 @@ const event = {
                 { itemId: 9, quantity: 1 },
             ]
         }
-    }]
+    }, {
+        name: "event_di_san_1",
+        description_1: "Săn thú gần nhà",
+        description_2: "Tu vi tăng 20 tốn 20 thể lực và 8 giờ và săn thú kiếm nguyên liệu",
+        time: 8,
+        hungryRequired: 20,
+        bonusExp: 20,
+        reward: {
+            1: [
+                { itemId: 7, quantity: 1 },
+                { itemId: 8, quantity: 1 },
+                { itemId: 9, quantity: 1 },
+            ]
+        },
+        hunt: {
+            1: [
+                { enemyId: 1, quantity: 1 },
+                { enemyId: 2, quantity: 2 }
+            ]
+        }
+    }
+
+    ]
 }
 //Tuổi ban đầu
 let basicAge = 17;
 // Dữ liệu nhân vật
-let character = {
+let baseCharacter = {
     name: 'Nhân vật',
-    level: 0,
     exp: 0,
+    level: 0,
     expToLevelUp: 200,
     age: Math.floor(time * 24 * 30 * 12 / 360) + basicAge,
     maxAge: 100,
     attack: 5,
     defend: 5,
-    maxAge: 100,
     health: 100,
     maxHealth: 100,
     energy: 50,
     maxEnergy: 50,
-    hungry: 3000000
+    hungry: 3000000,
+    crit: 0,
+    dodge: 0,
 };
+
 let character_item = {
     weapon: 0,
     armor: 0,
@@ -238,8 +262,38 @@ let character_item = {
     accessory3: 0
 };
 
+function calculateStats() {
+    // Sao chép thuộc tính gốc để bắt đầu
+    let totalStats = { ...baseCharacter };
 
-let character_inv = [];//itemId = ?,quantity=?
+    // Duyệt qua từng trang bị
+    for (let key in character_item) {
+        const item = getItemDetail(character_item[key]);
+
+        // Cộng tất cả các chỉ số của trang bị vào thuộc tính của nhân vật
+        for (let stat in item) {
+            if (stat !== 'id' && stat !== 'name' && stat !== 'weight' && stat !== 'rarity') { // Bỏ qua thuộc tính `id`
+                totalStats[stat] = (totalStats[stat] || 0) + item[stat];
+            }
+        }
+    }
+
+    return totalStats;
+}
+let character = calculateStats();
+//itemId = ?,quantity=?
+let character_inv = [
+    { itemId: 1, quantity: 1 },
+    { itemId: 3, quantity: 1 }
+];
+//set avatar
+export function setAvatarPlayer(url) {
+    avatarPlayer = url;
+}
+//Hàm nhận url avatar
+export function getAvatarPlayer() {
+    return avatarPlayer;
+}
 //Hàm để nhận dữ liệu list item
 export function getItemList() {
     return items;
@@ -354,19 +408,19 @@ export function loadCharacterData() {
 // Hàm cập nhật giao diện
 export function updateUI() {
     document.getElementById('character-name').innerText = character.name;
-    document.getElementById('character-level').innerText = `Tu vi: ${getLevelByExp(character.exp)}}`;
+    document.getElementById('character-level').innerText = `Tu vi: ${getLevelByExp(character.exp)}`;
     document.getElementById('character-exp').innerText = `EXP: ${character.exp}/ ${character.expToLevelUp}`;
     document.getElementById('character-health').innerText = `Máu: ${character.health}/ ${character.maxHealth}`;
     document.getElementById('character-energy').innerText = `Năng lượng: ${character.energy}/ ${character.maxEnergy}`;
     document.getElementById('character-age').innerText = `Tuổi: ${character.age}/ ${character.maxAge}`;
     document.getElementById('character-hungry').innerText = `Đói bụng: ${character.hungry}`;
-    document.getElementById('char-weapon').innerText = character_item.weapon === 0 ? "" : items.weapons[character_item.weapon];
-    document.getElementById('char-armor').innerText = character_item.armor === 0 ? "" : items.armor[character_item.armor];
-    document.getElementById('char-helmet').innerText = character_item.helmet === 0 ? "" : items.helmet[character_item.helmet];
-    document.getElementById('char-boots').innerText = character_item.boots === 0 ? "" : items.boots[character_item.boots];
-    document.getElementById('char-accessory-1').innerText = character_item.accessory1 === 0 ? "" : items.accessory[character_item.accessory1];
-    document.getElementById('char-accessory-2').innerText = character_item.accessory2 === 0 ? "" : items.accessory[character_item.accessory2];
-    document.getElementById('char-accessory-3').innerText = character_item.accessory3 === 0 ? "" : items.accessory[character_item.accessory3];
+    document.getElementById('char-weapon').innerText = `Vũ khí: ${character_item.weapon === 0 ? "Không có" : getItemDetail(character_item.weapon).name}`;
+    document.getElementById('char-armor').innerText = `Giáp: ${character_item.armor === 0 ? "Không có" : items.armor[character_item.armor]}`;
+    document.getElementById('char-helmet').innerText = `Nón: ${character_item.helmet === 0 ? "Không có" : items.helmet[character_item.helmet]}`;
+    document.getElementById('char-boots').innerText = `Giày: ${character_item.boots === 0 ? "Không có" : items.boots[character_item.boots]}`;
+    document.getElementById('char-accessory-1').innerText = `Trang sức: ${character_item.accessory1 === 0 ? "Không có" : items.accessory[character_item.accessory1]}`;
+    document.getElementById('char-accessory-2').innerText = `Trang sức: ${character_item.accessory2 === 0 ? "Không có" : items.accessory[character_item.accessory2]}`;
+    document.getElementById('char-accessory-3').innerText = `Trang sức: ${character_item.accessory3 === 0 ? "Không có" : items.accessory[character_item.accessory3]}`;
 }
 
 export function updateTime() {
@@ -380,6 +434,8 @@ function eventHandler(event_this) {
             return event_danh_ca(event_this);
         case 'event_tu_luyen_1':
             return event_tu_luyen(event_this);
+        case 'event_di_san_1':
+            return event_di_san(event_this);
         default:
             console.log("Sự kiện không được định nghĩa.");
     }
@@ -391,6 +447,100 @@ const autoFunctions = [];
 function addToAutoFunctions(event_this) {
     addAutoLog(event_this);
 }
+// Hàm hiển thị danh sách vật phẩm lên túi đồ
+export function updateUIInv(selectedType) {
+    let inventoryDisplay = document.getElementById('inventoryItems');
+    inventoryDisplay.innerHTML = ''; // Xóa nội dung cũ nếu có
+
+    // Tạo danh sách vật phẩm để hiển thị
+    let itemList = document.createElement('ul');
+    itemList.style.listStyleType = 'none';  // Loại bỏ dấu chấm
+    itemList.style.paddingLeft = '0';
+
+    // Duyệt qua danh sách inventory để hiển thị
+    character_inv.filter(item => items[selectedType].some(i => i.id === item.itemId))
+        .forEach(item => {
+            // Lấy thông tin chi tiết của item từ itemList
+            let itemDetails = getItemDetail(item.itemId);
+
+            let listItem = document.createElement('li');
+            let divalt = document.createElement('div');
+
+            listItem.style.display = 'flex';
+            listItem.style.justifyContent = 'space-between';
+            let itemName = document.createElement('span');
+            itemName.classList.add('item-name');
+            itemName.textContent = `${itemDetails.name} (x${item.quantity})`; // Hiển thị số lượng
+
+            // Xử lý hiển thị các nút tương ứng theo loại
+            if (selectedType === 'food') {
+                let btn = document.createElement('button');
+                btn.textContent = 'Sử dụng';
+                btn.addEventListener('click', () => useFood(item, 1));
+
+                let btnMax = document.createElement('button');
+                btnMax.textContent = 'Dùng tất cả';
+                btnMax.addEventListener('click', () => useFood(item, item.quantity));
+                divalt.appendChild(btn);
+                divalt.appendChild(btnMax);
+            }
+            if (selectedType === 'weapons') {
+                let btnWear = document.createElement('button');
+                btnWear.textContent = 'Trang bị';
+                btnWear.addEventListener('click', () => useWeapons(item.itemId));
+                divalt.appendChild(btnWear);
+            }
+
+            listItem.appendChild(itemName);
+            listItem.appendChild(divalt);
+            itemList.appendChild(listItem);
+
+            // Sự kiện hiển thị tooltip khi trỏ chuột vào item
+            let tooltipTimeout;
+            listItem.addEventListener('mouseenter', function (e) {
+                tooltipTimeout = setTimeout(() => {
+                    showTooltip(itemDetails, e);
+                }, 1000); // Hiển thị sau 1 giây
+            });
+
+            // Ẩn tooltip khi nhấp chuột vào item
+            listItem.addEventListener('click', function () {
+                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu tooltip đang đợi
+                hideTooltip(); // Ẩn tooltip ngay khi nhấp chuột
+            });
+
+            // Ẩn tooltip khi di chuột ra ngoài item
+            listItem.addEventListener('mouseleave', function () {
+                clearTimeout(tooltipTimeout); // Hủy hiển thị nếu chuột rời đi trước 1 giây
+                hideTooltip(); // Ẩn tooltip
+            });
+        });
+
+    inventoryDisplay.appendChild(itemList); // Hiển thị danh sách trong modal
+    // Hàm hiển thị tooltip với thông tin chi tiết của item
+    function showTooltip(item, event) {
+        let tooltip = document.getElementById('tooltip');
+        tooltip.innerHTML = `
+    Tên: ${item.name} <br>
+    Giá: ${item.price} <br>
+    Sát thương: ${item.damage || 'N/A'} <br>
+    Phòng thủ: ${item.defense || 'N/A'}
+    `;
+        // Hiển thị tooltip
+        tooltip.style.display = 'block';
+
+        // Đặt vị trí tooltip dựa trên sự kiện chuột
+        tooltip.style.left = `${event.pageX + 10}px`;
+        tooltip.style.top = `${event.pageY + 10}px`;
+    }
+
+    // Hàm ẩn tooltip khi chuột rời item
+    function hideTooltip() {
+        let tooltip = document.getElementById('tooltip');
+        tooltip.style.display = 'none';
+    }
+}
+
 // Hàm hiển thị danh sách sự kiện và thêm nút Auto
 export function updateUIEvent() {
     const listevent = document.getElementById('event-Cul');
@@ -461,6 +611,17 @@ function event_tu_luyen(event) {
         }
     }
 }
+//Hàm function event_di_san
+function event_di_san(event) {
+    if (spendTime(event.time)) {
+        if (reduce_hungry(event.hungryRequired)) {
+            addExp(event.bonusExp);
+            huntEvent(event);
+            updateUI();
+            return true;
+        }
+    }
+}
 //Sử dụng thức ăn
 export function useFood(item, quantity) {
     let itemInfo = getItemDetail(item.itemId);
@@ -470,8 +631,24 @@ export function useFood(item, quantity) {
     showSelectedInventory();
     updateUI();
 }
+//Sử dụng weapons
+export function useWeapons(itemId) {
+    const itemInv = character_inv.map(i => i.itemId === itemId);
+    if (itemInv) {
+        if (character_item.weapon) {
+            addToInventory(character_item.weapon, 1);
+            reduce_quantity_item(itemId, 1);
+            character_item.weapon = itemId;
+        } else {
+            reduce_quantity_item(itemId, 1);
+            character_item.weapon = itemId;
+        }
+    }
+    character = calculateStats();
+    updateUIInv('weapons');
+    updateUI();
+}
 function get_item_from_rewards(event) {
-    // Tỷ lệ xuất hiện của từng rate
     const rates = [
         { rate: 1, chance: 70 },  // 70% cho rate 1
         { rate: 2, chance: 20 },  // 20% cho rate 2
@@ -479,9 +656,7 @@ function get_item_from_rewards(event) {
         { rate: 4, chance: 2 }    // 2% cho rate 4
     ];
 
-    // Random một số từ 0 đến 99 để xác định nhóm rate
     const randomValue = Math.floor(Math.random() * 100);
-    // Xác định nhóm rate dựa vào randomValue
     let selectedRate;
     let cumulativeChance = 0;
     for (const rate of rates) {
@@ -502,7 +677,37 @@ function get_item_from_rewards(event) {
     }
     return true;  // Trả về true khi thành công
 }
+function huntEvent(event) {
+    // Tỷ lệ xuất hiện của từng rate
+    const rates = [
+        { rate: 1, chance: 70 },  // 70% cho rate 1
+        { rate: 2, chance: 20 },  // 20% cho rate 2
+        { rate: 3, chance: 8 },   // 8% cho rate 3
+        { rate: 4, chance: 2 }    // 2% cho rate 4
+    ];
 
+    // Random một số từ 0 đến 99 để xác định nhóm rate
+    const randomValue = Math.floor(Math.random() * 100);
+
+    // Xác định nhóm rate dựa vào randomValue
+    let selectedRate;
+    let cumulativeChance = 0;
+    for (const rate of rates) {
+        cumulativeChance += rate.chance;
+        if (randomValue < cumulativeChance) {
+            selectedRate = rate.rate;
+            break;
+        }
+    }
+
+    // Kiểm tra xem rate đã chọn có tồn tại trong reward và hunt
+    const selectedEnemies = event.hunt[selectedRate];
+    if (selectedEnemies) {
+        const selectedEnemie = selectedEnemies[Math.floor(Math.random() * selectedEnemies.length)];
+        console.log("Kẻ địch:", selectedEnemie);
+        startBattle(selectedEnemie.enemyId);
+    }
+}
 //Hàm function bắt cá
 function event_danh_ca(event) {
     if (spendTime(event.time)) {
@@ -519,7 +724,6 @@ function showTooltip_event(event, e) {
     tooltip.innerHTML = `Mô tả : ${event.description_2}`;
     // Hiển thị tooltip
     tooltip.style.display = 'block';
-
     // Đặt vị trí tooltip dựa trên sự kiện chuột
     tooltip.style.left = `${e.pageX + 10}px`;
     tooltip.style.top = `${e.pageY + 10}px`;
@@ -540,24 +744,30 @@ export function reduce_hungry(hungryRe) {
         return true
     }
 }
-//Hàm tăng exp
+//Hàm tăng điểm kinh nghiệm
 function addExp(bonnusExp) {
-    // Tính tổng exp sau khi thêm
     const expAfter = character.exp + bonnusExp;
 
-    // Nếu tổng exp vượt quá expToLevelUp, đặt exp bằng expToLevelUp
     if (expAfter >= character.expToLevelUp) {
-        character.exp = character.expToLevelUp; // Giới hạn ở expToLevelUp
-        addLog('Bạn có thể tăng cảnh giới rồi! Chúc mừng')
+        character.exp = character.expToLevelUp;
+        addLog('Tu vi đã đạt tối đa. Cần đột phá', 'red')
+        if (!document.getElementById('breakthrough-btn')) {
+            let leftSection = document.getElementById('left-section');
+            let btnBr = document.createElement('button');
+            btnBr.textContent = 'Đột phá';
+            btnBr.id = 'breakthrough-btn'
+            leftSection.appendChild(btnBr);
+        }
+        return true;
     } else {
-        // Nếu chưa đạt tới expToLevelUp, cộng exp bình thường
         character.exp += bonnusExp;
         addLog(`Tu vi của bạn tăng ${bonnusExp}`)
+        return false;
     }
 }
 
 //Hàm trả về cấp độ từ exp đang có load khi khởi động
-function getLevelByExp(exp) {
+export function getLevelByExp() {
     let currentLevel = null;
     let currentSubLevel = null;
 
@@ -567,7 +777,7 @@ function getLevelByExp(exp) {
 
         // Kiểm tra trong từng cấp nhỏ của mỗi cấp lớn
         for (let i = 0; i < subLevels.length; i++) {
-            if (exp < expRequired[i]) {
+            if (baseCharacter.exp < expRequired[i]) {
                 currentLevel = levelData[lvl].name; // Cấp lớn
                 currentSubLevel = subLevels[i]; // Cấp nhỏ
                 return `${currentLevel} - ${currentSubLevel}`;
@@ -606,16 +816,15 @@ export function addHungry(bonusHungry) {
     character.hungry += bonusHungry;
 }
 
-export function addLog(message) {
+export function addLog(message, color = 'black') {
     let logContainer = document.getElementById('action-log');
-
     // Lấy thời gian hiện tại
     let now = new Date();
     let currentTime = now.toLocaleTimeString(); // Định dạng giờ:phút:giây
 
-    // Tạo một mục log mới
     let logEntry = document.createElement('div');
     logEntry.textContent = `[${currentTime}] ${message}`;
+    logEntry.style.color = color;
 
     // Thêm log mới vào container
     logContainer.appendChild(logEntry);
@@ -640,7 +849,6 @@ export function runAutoFunctions(status) {
                 if (result === true) { // Tiến đến hàm tiếp theo nếu trả về `true` hoặc không trả về gì
                     index++;
                 }
-                console.log(result)
             }, 200); // Chạy mỗi 1 giây (hoặc có thể điều chỉnh)
         }
     } else {
@@ -653,7 +861,6 @@ export function runAutoFunctions(status) {
 export function addAutoLog(event_this) {
     const autoFunction = () => eventHandler(event_this);
     autoFunctions.push(autoFunction);
-    console.log(autoFunctions);
 
     // Thêm vào log hiển thị
     const logList = document.getElementById('auto-log-list');
@@ -678,4 +885,161 @@ export function addAutoLog(event_this) {
 
     logItem.appendChild(deleteBtn);
     logList.appendChild(logItem);
+}
+
+const enemies = [
+    { id: 1, name: 'Chó sói con', avatar: '../enemyImg/enemy_1.png', health: 60, attack: 10, defend: 0, crit: 0, dodge: 0 },
+    { id: 2, name: 'Chó sói trưởng thành', avatar: '../enemyImg/enemy_2.png', health: 80, attack: 10, defend: 5, crit: 0, dodge: 0 }
+]
+export function getEnemies() {
+    return enemies;
+}
+function showAttackPopup(enemyId) {
+    const battlePopup = document.getElementById('battlePopup');
+    const player = document.getElementById('player');
+    const opponent = document.getElementById('opponent');
+    const playerAttackBtn = document.getElementById('playerAttackBtn');
+    const closePopupBtn = document.getElementById('closePopupBtn');
+    const damageInfo = document.getElementById('damageInfo');
+    damageInfo.innerHTML = '';
+    document.getElementById('player-img').src = avatarPlayer;
+
+    let characterInfo = getCharacter();
+    const enemy = enemies.find(e => e.id === enemyId);
+    let enemyHealth = enemy.health;
+    document.getElementById('enemy-img').src = enemy.avatar;
+    battlePopup.style.display = 'flex';
+
+    function displayDamage(message) {
+        damageInfo.innerHTML += `<p>${message}</p>`;
+        // damageInfo.scrollTop = damageInfo.scrollHeight;
+    }
+
+    function calculateDamage(attack, defense, critChance, critDamageMultiplier = 1.5, coefficient = 10) {
+        const isCritical = Math.random() < critChance;
+        const criticalMultiplier = isCritical ? critDamageMultiplier : 1;
+        const dameDealt = (attack * coefficient) / (coefficient + defense);
+        return Math.floor(dameDealt * criticalMultiplier);
+    }
+
+    // Hàm tấn công của người chơi
+    function playerAttack() {
+        if (Math.random() < enemy.dodge) {
+            displayDamage(`${enemy.name} đã né tránh thành công !`);
+            return;
+        }
+        const damage = calculateDamage(characterInfo.attack, enemy.defend, characterInfo.crit);
+
+        enemyHealth -= damage;
+        player.classList.add('attack-animation');
+        displayDamage(`Người chơi gây ${damage.toFixed(2)} sát thương! Đối thủ còn ${enemyHealth.toFixed(2)} máu`);
+
+        setTimeout(() => {
+            player.classList.remove('attack-animation');
+        }, 100);
+
+        if (enemyHealth <= 0) {
+            displayDamage(`Đối thủ đã bị tiêu diệt!`);
+            clearInterval(battleInterval); // Dừng trận đấu khi đối thủ bị hạ gục
+            closePopupBtn.disabled = false;
+        }
+    }
+
+    // Hàm tấn công của đối thủ
+    function opponentAttack() {
+        if (Math.random() < characterInfo.dodge) {
+            displayDamage(`Đã né tránh thành công !`);
+            return;
+        }
+        const damage = calculateDamage(enemy.attack, characterInfo.defend, enemy.crit || 0);
+        characterInfo.health -= damage;
+        opponent.classList.add('attack-opponent');
+        displayDamage(`${enemy.name} gây ${damage.toFixed(2)} sát thương! Người chơi còn ${characterInfo.health.toFixed(2)} máu`);
+
+        setTimeout(() => {
+            opponent.classList.remove('attack-opponent');
+        }, 100);
+
+        if (characterInfo.health <= 0) {
+            displayDamage(`Người chơi đã bị tiêu diệt!`);
+            clearInterval(battleInterval); // Dừng trận đấu khi người chơi bị hạ gục
+            closePopupBtn.disabled = false;
+        }
+    }
+
+    // Tự động tấn công xen kẽ giữa người chơi và đối thủ
+    const battleInterval = setInterval(() => {
+        closePopupBtn.disabled = true;
+        if (characterInfo.health > 0 && enemyHealth > 0) {
+            playerAttack();
+            setTimeout(opponentAttack, 100); // Để đối thủ tấn công sau người chơi 500ms
+        }
+    }, 1000); // Chu kỳ tấn công mỗi 1 giây
+
+    // Đóng popup
+    closePopupBtn.addEventListener('click', () => {
+        battlePopup.style.display = 'none';
+        updateUI();
+    });
+}
+function startBattle(enemyId) {
+    const characterInfo = getCharacter();
+    const enemy = enemies.find(e => e.id === enemyId);
+    if (!enemy) {
+        addLog("Kẻ địch không tồn tại!");
+        return;
+    }
+
+    let enemyHealth = enemy.health;
+
+    // Hàm tính sát thương
+    function calculateDamage(attack, defense, critChance, critDamageMultiplier = 1.5, coefficient = 10) {
+        const isCritical = Math.random() < critChance;
+        const criticalMultiplier = isCritical ? critDamageMultiplier : 1;
+        const damageDealt = (attack * coefficient) / (coefficient + defense);
+        return Math.floor(damageDealt * criticalMultiplier);
+    }
+
+    // Chiến đấu cho đến khi một bên hết máu
+    while (characterInfo.health > 0 && enemyHealth > 0) {
+        // Người chơi tấn công
+        if (Math.random() >= enemy.dodge) { // Kiểm tra né tránh của kẻ địch
+            const damageToEnemy = calculateDamage(characterInfo.attack, enemy.defend, characterInfo.crit);
+            enemyHealth -= damageToEnemy;
+            addLog(`Người chơi gây ${damageToEnemy.toFixed(2)} sát thương! Đối thủ còn ${Math.max(0, enemyHealth.toFixed(2))} máu`,'blue');
+
+            if (enemyHealth <= 0) {
+                addLog("Đối thủ đã bị tiêu diệt!");
+                break;
+            }
+        } else {
+            addLog(`${enemy.name} đã né tránh thành công!`);
+        }
+
+        // Đối thủ tấn công
+        if (Math.random() >= characterInfo.dodge) { // Kiểm tra né tránh của người chơi
+            const damageToPlayer = calculateDamage(enemy.attack, characterInfo.defend, enemy.crit || 0);
+            characterInfo.health -= damageToPlayer;
+            addLog(`${enemy.name} gây ${damageToPlayer.toFixed(2)} sát thương! Người chơi còn ${Math.max(0, characterInfo.health.toFixed(2))} máu`,'purple');
+
+            if (characterInfo.health <= 0) {
+                addLog("Người chơi đã bị tiêu diệt!");
+                showGameOverPopup();
+                break;
+            }
+        } else {
+            addLog(`Người chơi đã né tránh thành công!`);
+        }
+    }
+}
+// Hàm hiển thị popup "Game Over" và tải lại trò chơi
+function showGameOverPopup() {
+    const gameOverPopup = document.getElementById('gameOverPopup');
+    gameOverPopup.style.display = 'block';
+
+    // Xử lý sự kiện cho nút "Chơi lại"
+    document.getElementById('restartButton').addEventListener('click', () => {
+        gameOverPopup.style.display = 'none';
+        location.reload(); // Tải lại trang để bắt đầu lại trò chơi
+    });
 }
