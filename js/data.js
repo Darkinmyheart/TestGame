@@ -61,7 +61,10 @@ const items = {
     weapons: [
         { id: 1, name: "Kiếm gỗ", rarity: 1, damage: 10, weight: 5 },
         { id: 2, name: "Rìu gỗ", rarity: 1, damage: 15, weight: 8 },
-        { id: 3, name: "Cung gỗ", rarity: 1, damage: 8, weight: 5 }
+        { id: 3, name: "Cung gỗ", rarity: 1, damage: 8, weight: 5 },
+        { id: 22, name: "Kiếm đá", rarity: 1, damage: 20, weight: 10 },
+        { id: 23, name: "Rìu đá", rarity: 1, damage: 25, weight: 12 },
+        { id: 24, name: "Cung đá", rarity: 1, damage: 18, weight: 7 }
     ],
     armor: [
         { id: 4, name: "Áo giáp gỗ", rarity: 1, defense: 20, weight: 15, price: 5 },
@@ -70,9 +73,10 @@ const items = {
     ],
     material: [
         { id: 7, name: "gỗ", rarity: 1, price: 1 },
-        { id: 8, name: "cành cây", rarity: 1, price: 2 },
-        { id: 9, name: "đá", rarity: 1, price: 2 },
-        { id: 10, name: "đá lửa", rarity: 1, price: 2 }
+        { id: 8, name: "cành cây", rarity: 1, price: 1 },
+        { id: 9, name: "đá", rarity: 1, price: 1 },
+        { id: 10, name: "đá lửa", rarity: 1, price: 2 },
+        { id: 20, name: "Than củi", rarity: 1, price: 2 }
     ],
     food: [
         { id: 11, name: "Cá cơm suối", price: 1, bonusHungry: 10 },
@@ -83,9 +87,85 @@ const items = {
         { id: 16, name: "Cá ngọc đen", price: 3, bonusHungry: 20 },
         { id: 17, name: "Cá lân bạc", price: 9, bonusHungry: 30 },
         { id: 18, name: "Cá tiên vũ", price: 9, bonusHungry: 30 },
-        { id: 19, name: "Cá rồng đỏ", price: 35, bonusHungry: 40 }
+        { id: 19, name: "Cá rồng đỏ", price: 35, bonusHungry: 40 },
+        { id: 21, name: "Cá cơm nướng", price: 5, bonusHungry: 30 }
     ]
 };
+
+const recipe = {
+    weapons: [
+        {
+            itemId: 1, // Kiếm gỗ
+            quantity: 1,
+            recipe: [
+                { itemId: 7, quantity: 2 }, // gỗ
+                { itemId: 8, quantity: 1 }  // cành cây
+            ]
+        },
+        {
+            itemId: 2, // Rìu gỗ
+            quantity: 1,
+            recipe: [
+                { itemId: 7, quantity: 3 }, // gỗ
+                { itemId: 9, quantity: 1 }  // đá
+            ]
+        },
+        {
+            itemId: 3, // Cung gỗ
+            quantity: 1,
+            recipe: [
+                { itemId: 7, quantity: 2 }, // gỗ
+                { itemId: 8, quantity: 2 }  // cành cây
+            ]
+        }
+    ],
+    armor: [
+        {
+            itemId: 4, // Áo giáp gỗ
+            quantity: 1,
+            recipe: [
+                { itemId: 7, quantity: 5 }, // gỗ
+                { itemId: 9, quantity: 2 }  // đá
+            ]
+        },
+        {
+            itemId: 5, // Áo vải
+            quantity: 1,
+            recipe: [
+                { itemId: 8, quantity: 3 }, // cành cây
+                { itemId: 7, quantity: 1 }  // gỗ
+            ]
+        },
+        {
+            itemId: 6, // Áo giáp sắt
+            quantity: 1,
+            recipe: [
+                { itemId: 9, quantity: 5 }, // đá
+                { itemId: 7, quantity: 2 }  // gỗ
+            ]
+        }
+    ],
+    material: [
+        {
+            itemId: 20,
+            quantity: 1,
+            recipe: [
+                { itemId: 7, quantity: 1 }
+            ]
+        }
+    ],
+    food: [
+        {
+            itemId: 21,
+            quantity: 1,
+            recipe: [
+                { itemId: 20, quantity: 1 },
+                { itemId: 11, quantity: 1 }
+            ]
+        }
+    ]
+};
+
 const event = {
     1: [{
         name: "event_danh_ca",
@@ -111,7 +191,7 @@ const event = {
             4: [
                 { itemId: 19, quantity: 1 },
             ]
-        }
+        },
     },
     {
         name: "event_tu_luyen_1",
@@ -120,6 +200,13 @@ const event = {
         time: 8,
         hungryRequired: 20,
         bonusExp: 10,
+        reward: {
+            1: [
+                { itemId: 7, quantity: 1 },
+                { itemId: 8, quantity: 1 },
+                { itemId: 9, quantity: 1 },
+            ]
+        }
     }]
 }
 //Tuổi ban đầu
@@ -139,7 +226,7 @@ let character = {
     maxHealth: 100,
     energy: 50,
     maxEnergy: 50,
-    hungry: 100
+    hungry: 3000000
 };
 let character_item = {
     weapon: 0,
@@ -150,7 +237,9 @@ let character_item = {
     accessory2: 0,
     accessory3: 0
 };
-let character_inv = [];
+
+
+let character_inv = [];//itemId = ?,quantity=?
 //Hàm để nhận dữ liệu list item
 export function getItemList() {
     return items;
@@ -178,8 +267,53 @@ export function spendTime(timeSpend) {
 export function getCharacter() {
     return character;
 }
+//Hàm để nhận dữ liệu túi của nhân vật
 export function getCharacterInv() {
     return character_inv;
+}
+//Hàm nhận dữ liệu của item có trong túi dựa vào itemId
+export function getInventoryItem(itemId, quantity) {
+    const item = character_inv.find(item => item.itemId === itemId);
+
+    if (item && item.quantity >= quantity) {
+        return item;
+    }
+
+    return null;
+}
+//Hàm giảm số lượng item trong túi đồ dựa itemId
+export function reduce_quantity_item(itemId, quantity) {
+    const item = character_inv.find(item => item.itemId === itemId); // Tìm item theo itemId
+
+    if (item) { // Kiểm tra nếu tìm thấy item
+        item.quantity -= quantity;
+
+        // Nếu số lượng item <= 0 thì xóa khỏi túi đồ
+        if (item.quantity <= 0) {
+            const index = character_inv.indexOf(item);
+            if (index !== -1) {
+                character_inv.splice(index, 1); // Xóa item khỏi character_inv
+            }
+        }
+    }
+}
+
+//Thêm item vào túi đồ nhân vật
+export function addToInventory(itemId, quantity) {
+    // Kiểm tra xem vật phẩm đã có trong kho đồ chưa
+    const itemInInventory = character_inv.find(item => item.itemId === itemId);
+
+    if (itemInInventory) {
+        // Nếu có, tăng số lượng
+        itemInInventory.quantity += quantity;
+    } else {
+        // Nếu chưa, thêm vật phẩm mới vào kho
+        character_inv.push({ itemId, quantity });
+    }
+}
+//Hàm nhận dữ liệu recipe
+export function getRecipe() {
+    return recipe;
 }
 //Hàm tìm thông tin chi tiết item
 export function getItemDetail(itemId) {
@@ -203,20 +337,6 @@ function convertGameTimeToDate() {
     const remainingMonths = months % 12;
 
     return `Ngày ${remainingDays + 1} - tháng ${remainingMonths + 1} - năm ${years}`;
-}
-
-//Thêm item vào túi đồ nhân vật
-function addToInventory(itemId, quantity) {
-    // Kiểm tra xem vật phẩm đã có trong kho đồ chưa
-    const itemInInventory = character_inv.find(item => item.itemId === itemId);
-
-    if (itemInInventory) {
-        // Nếu có, tăng số lượng
-        itemInInventory.quantity += quantity;
-    } else {
-        // Nếu chưa, thêm vật phẩm mới vào kho
-        character_inv.push({ itemId, quantity });
-    }
 }
 // Hàm lưu trữ dữ liệu vào localStorage
 export function saveCharacterData() {
@@ -335,46 +455,60 @@ function event_tu_luyen(event) {
     if (spendTime(event.time)) {
         if (reduce_hungry(event.hungryRequired)) {
             addExp(event.bonusExp);
+            get_item_from_rewards(event);
             updateUI();
             return true;
         }
     }
 }
+//Sử dụng thức ăn
+export function useFood(item, quantity) {
+    let itemInfo = getItemDetail(item.itemId);
+    addHungry(itemInfo.bonusHungry * quantity);
+    addLog(`Sử dụng ${quantity} * ${itemInfo.name} tăng độ no ${itemInfo.bonusHungry * quantity}`)
+    reduce_quantity_item(item.itemId, quantity);
+    showSelectedInventory();
+    updateUI();
+}
+function get_item_from_rewards(event) {
+    // Tỷ lệ xuất hiện của từng rate
+    const rates = [
+        { rate: 1, chance: 70 },  // 70% cho rate 1
+        { rate: 2, chance: 20 },  // 20% cho rate 2
+        { rate: 3, chance: 8 },   // 8% cho rate 3
+        { rate: 4, chance: 2 }    // 2% cho rate 4
+    ];
+
+    // Random một số từ 0 đến 99 để xác định nhóm rate
+    const randomValue = Math.floor(Math.random() * 100);
+    // Xác định nhóm rate dựa vào randomValue
+    let selectedRate;
+    let cumulativeChance = 0;
+    for (const rate of rates) {
+        cumulativeChance += rate.chance;
+        if (randomValue < cumulativeChance) {
+            selectedRate = rate.rate;
+            break;
+        }
+    }
+
+    // Chọn một loại item ngẫu nhiên từ nhóm rate đã xác định
+    const itemPool = event.reward[selectedRate];
+    if (itemPool) {
+        const selectedItem = itemPool[Math.floor(Math.random() * itemPool.length)];
+        // Thêm cá vào túi và ghi log
+        addToInventory(selectedItem.itemId, selectedItem.quantity);
+        addLog(`Đạt được ${selectedItem.quantity} ${getItemDetail(selectedItem.itemId).name}`);
+    }
+    return true;  // Trả về true khi thành công
+}
+
 //Hàm function bắt cá
 function event_danh_ca(event) {
     if (spendTime(event.time)) {
         if (reduce_hungry(event.hungryRequired)) {
-            // Tỷ lệ xuất hiện của từng rate
-            const rates = [
-                { rate: 1, chance: 70 },  // 70% cho rate 1
-                { rate: 2, chance: 20 },  // 20% cho rate 2
-                { rate: 3, chance: 8 },   // 8% cho rate 3
-                { rate: 4, chance: 2 }    // 2% cho rate 4
-            ];
-
-            // Random một số từ 0 đến 99 để xác định nhóm rate
-            const randomValue = Math.floor(Math.random() * 100);
-            // Xác định nhóm rate dựa vào randomValue
-            let selectedRate;
-            let cumulativeChance = 0;
-            for (const rate of rates) {
-                cumulativeChance += rate.chance;
-                if (randomValue < cumulativeChance) {
-                    selectedRate = rate.rate;
-                    break;
-                }
-            }
-
-            // Chọn một loại cá ngẫu nhiên từ nhóm rate đã xác định
-            const fishPool = event.reward[selectedRate];
-            const selectedFish = fishPool[Math.floor(Math.random() * fishPool.length)];
-
-            // Thêm cá vào túi và ghi log
-            addToInventory(selectedFish.itemId, selectedFish.quantity);
-            addLog(`Câu được ${selectedFish.quantity} ${getItemDetail(selectedFish.itemId).name}`);
+            get_item_from_rewards(event);
             updateUI();
-
-            return true;  // Trả về true khi thành công
         }
     }
 }
@@ -471,22 +605,6 @@ function updateExpToLevelUp() {
 export function addHungry(bonusHungry) {
     character.hungry += bonusHungry;
 }
-//Hàm giảm số lượng item trong túi đồ
-export function reduce_quantity_item(itemId, quantity) {
-    const item = character_inv.find(item => item.itemId === itemId); // Tìm item theo itemId
-
-    if (item) { // Kiểm tra nếu tìm thấy item
-        item.quantity -= quantity;
-
-        // Nếu số lượng item <= 0 thì xóa khỏi túi đồ
-        if (item.quantity <= 0) {
-            const index = character_inv.indexOf(item);
-            if (index !== -1) {
-                character_inv.splice(index, 1); // Xóa item khỏi character_inv
-            }
-        }
-    }
-}
 
 export function addLog(message) {
     let logContainer = document.getElementById('action-log');
@@ -548,7 +666,7 @@ export function addAutoLog(event_this) {
     deleteBtn.innerText = "X";
     deleteBtn.classList.add('delete-button');
     deleteBtn.style.marginLeft = '10px';
-    
+
     // Sự kiện khi nhấn nút "X"
     deleteBtn.addEventListener('click', () => {
         const index = autoFunctions.indexOf(autoFunction);

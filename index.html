@@ -58,7 +58,7 @@
             <div class="left-section">
                 <h2>Hoạt động</h2>
                 <p>Các hoạt động của nhân vật bao gồm rèn vũ khí và chế thuốc,nấu ăn....</p>
-                <button >Nấu ăn</button>
+                <button id="craft-btn" >Chế đồ</button>
                 <button>Ngủ</button>
             </div>
             <div class="middle-section">
@@ -75,7 +75,7 @@
                 <button id="auto-stop">Dừng tự động</button>
             </div>
         </div>
-
+        <!-- Túi đồ -->
         <div id="inventoryModal" class="modal">
             <div class="modal-content">
                 <div class="modal-content-inv">
@@ -93,6 +93,7 @@
                 <button style="bottom: 5px;" class="close-btn" id="closeInventoryBtn">Đóng</button>
             </div>
         </div>
+        <!-- Thuộc tính -->
         <div id="atribute_character_modal" class="modal">
             <div class="modal-content">
                 <div class="modal-content-char">
@@ -105,8 +106,34 @@
                 <button style="bottom: 5px;" class="close-btn" id="closeAtributeBtn">Đóng</button>
             </div>
         </div>
+        <!-- Chế đồ -->
+        <div id="craft_modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-content-craft">
+                    <h2 style="width: 100%;">Chế đồ</h2>
+                    <select style="width: 100%;" id="recipe_type">
+                        <option value="weapons">Vũ khí</option>
+                        <option value="armor">Tiêu hao</option>
+                        <option value="material">Nguyên liệu</option>
+                        <option value="food">Thức ăn</option>
+                    </select>
+                    <div style="max-height: 400px;" id="recipe_list">
+                        <!-- Các mục chế đồ sẽ được chèn vào đây -->
+                    </div>
+                </div>
+                <button style="bottom: 5px;" class="close-btn" id="closeRecipeBtn">Đóng</button>
+            </div>
+        </div>
         <div id="action-log" class="log-container">
             <!-- Nội dung log sẽ được chèn vào đây -->
+        </div>
+        <div id="craft-item-popup" class="popup-craft" style="display: none;">
+            <div class="popup-content">
+                <label for="craft-item-quantity">Nhập số lượng muốn chế tạo:</label>
+                <input type="number" id="craft-item-quantity" min="1" value="1" />
+                <button id="craft-item-confirm-btn">Chế tạo</button>
+                <button id="craft-item-cancel-btn">Hủy</button>
+            </div>
         </div>
         <div id="tooltip" class="tooltip"></div>
     </main>
